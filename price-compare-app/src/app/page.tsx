@@ -4,75 +4,79 @@ import { useState } from 'react';
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<{store: string, price: string, logo: string}[] | null>(null);
+  const [results, setResults] = useState<any[] | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
-    
     setLoading(true);
 
-    // SIMULATING AN API CALL: We tell the code to wait 1.5 seconds 
-    // to mimic the time it takes to contact Amazon and Flipkart.
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const apiKey = "6e4b4401ecfe93031ddd58c370f4f82ad87f63b1";
 
-    // Here is our simulated data coming back from the "servers"
-    setResults([
-      { store: 'Amazon', price: '₹72,999', logo: '🛒' },
-      { store: 'Flipkart', price: '₹71,499', logo: '🛍️' },
-      { store: 'Croma', price: '₹73,500', logo: '🏬' }
-    ]);
+    try {
+      const response = await fetch('https://google.serper.dev/shopping', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ q: searchQuery, gl: "in" }), // "gl: in" tells it to look in India
+      });
+
+      const data = await response.json();
+      // We take the first 5 shopping results from the real Google data
+      setResults(data.shopping?.slice(0, 5) || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      alert("Something went wrong with the engine!");
+    }
 
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center p-4 pt-20">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 mb-8">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-          Find the Best Price
+    <main className="min-h-screen bg-gray-100 flex flex-col items-center p-4 pt-10 text-black">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 mb-8 border border-blue-100">
+        <h1 className="text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+          Live Price Finder
         </h1>
-        <p className="text-center text-gray-500 mb-8">
-          Compare instantly across Amazon, Flipkart, and more.
-        </p>
+        <p className="text-center text-gray-500 mb-8 font-medium">Fetching real-time data from across the web.</p>
 
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
-            placeholder="e.g., iPhone 15 256GB..."
-            className="flex-1 px-5 py-4 rounded-xl border border-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+            placeholder="Search any product..."
+            className="flex-1 px-5 py-4 rounded-xl border-2 border-gray-100 focus:border-blue-500 outline-none text-lg transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button 
             type="submit"
             disabled={loading}
-            className="bg-black text-white px-8 py-4 rounded-xl font-semibold hover:bg-gray-800 transition-colors text-lg disabled:bg-gray-400"
+            className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all disabled:bg-gray-400"
           >
-            {loading ? 'Searching...' : 'Compare'}
+            {loading ? 'Searching...' : 'Search'}
           </button>
         </form>
       </div>
 
-      {/* RESULTS DISPLAY SECTION */}
       {results && (
-        <div className="w-full max-w-2xl flex flex-col gap-4">
-          <h2 className="text-xl font-semibold text-gray-700 px-2">Results for "{searchQuery}"</h2>
-          
-          {results.map((item, index) => (
-            <div key={index} className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex justify-between items-center hover:shadow-lg transition-shadow">
-              <div className="flex items-center gap-4">
-                <span className="text-3xl">{item.logo}</span>
-                <span className="text-xl font-medium text-gray-800">{item.store}</span>
+        <div className="w-full max-w-2xl flex flex-col gap-4 pb-20">
+          {results.length > 0 ? results.map((item, index) => (
+            <div key={index} className="bg-white p-5 rounded-2xl shadow-md border border-gray-50 flex flex-col sm:flex-row items-center gap-6">
+              <img src={item.thumbnail} alt={item.title} className="w-24 h-24 object-contain rounded-lg" />
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-800 text-lg line-clamp-2">{item.title}</h3>
+                <p className="text-blue-600 font-semibold">{item.source}</p>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="text-2xl font-bold text-green-600">{item.price}</span>
-                <button className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100">
-                  Buy Now
-                </button>
+              <div className="text-right flex flex-col items-end gap-2">
+                <span className="text-2xl font-black text-green-600">{item.price}</span>
+                <a href={item.link} target="_blank" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:scale-105 transition-transform">
+                  View Deal
+                </a>
               </div>
             </div>
-          ))}
+          )) : <p className="text-center text-gray-500 italic">No real-time results found. Try a different product!</p>}
         </div>
       )}
     </main>
