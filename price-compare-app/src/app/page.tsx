@@ -64,7 +64,12 @@ export default function Home() {
         <div className="w-full max-w-2xl flex flex-col gap-4 pb-20">
           {results.length > 0 ? results.map((item, index) => (
             <div key={index} className="bg-white p-5 rounded-2xl shadow-md border border-gray-50 flex flex-col sm:flex-row items-center gap-6">
-              <img src={item.thumbnail} alt={item.title} className="w-24 h-24 object-contain rounded-lg" />
+              <img 
+  src={item.thumbnail} 
+  alt={item.title} 
+  className="w-24 h-24 object-contain rounded-lg" 
+  referrerPolicy="no-referrer" 
+/>
               <div className="flex-1">
                 <h3 className="font-bold text-gray-800 text-lg line-clamp-2">{item.title}</h3>
                 <p className="text-blue-600 font-semibold">{item.source}</p>
